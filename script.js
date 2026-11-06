@@ -1,86 +1,77 @@
 
-const photoInput = document.getElementById("photo-input");
-const uploadTrigger = document.getElementById("upload-trigger");
+const html = document.documentElement;
+const themeButton = document.getElementById("theme-toggle");
+
+// =========================
+// THEME
+// =========================
+
+const savedTheme = localStorage.getItem("portfolio-theme");
+
+html.setAttribute("data-theme", savedTheme || "dark");
+
+function updateThemeButton() {
+    const currentTheme = html.getAttribute("data-theme");
+
+    themeButton.textContent =
+        currentTheme === "dark" ? "☀️ Light" : "🌙 Dark";
+}
+
+themeButton.addEventListener("click", function () {
+    const currentTheme = html.getAttribute("data-theme");
+
+    const newTheme =
+        currentTheme === "dark" ? "light" : "dark";
+
+    html.setAttribute("data-theme", newTheme);
+    localStorage.setItem("portfolio-theme", newTheme);
+
+    updateThemeButton();
+});
+
+updateThemeButton();
+
+// =========================
+// PROFILE PHOTO
+// =========================
+
+const photoInput = document.getElementById("photo-upload");
 const profileImage = document.getElementById("profile-image");
-const avatarPlaceholder = document.getElementById("avatar-placeholder");
-const themeToggle = document.getElementById("theme-toggle");
+const profilePlaceholder = document.getElementById("profile-placeholder");
 
-uploadTrigger.addEventListener("click", () => photoInput.click());
+function showProfileImage(source) {
+    profileImage.onload = function () {
+        profileImage.classList.add("visible");
+        profilePlaceholder.classList.add("hidden");
+    };
 
-function showPhoto(data) {
-  profileImage.src = data;
-  profileImage.hidden = false;
-  avatarPlaceholder.hidden = true;
+    profileImage.onerror = function () {
+        profileImage.classList.remove("visible");
+        profilePlaceholder.classList.remove("hidden");
+    };
+
+    profileImage.src = source;
 }
 
-const savedPhoto = localStorage.getItem("portfolioPhoto");
-if (savedPhoto) showPhoto(savedPhoto);
+// Load public profile photo from repository
+showProfileImage("profile.jpg");
 
-photoInput.addEventListener("change", () => {
-  const file = photoInput.files[0];
-  if (!file) return;
+// Preview a photo selected from the computer
+photoInput.addEventListener("change", function (event) {
+    const file = event.target.files[0];
 
-  if (!file.type.startsWith("image/")) {
-    alert("Please select an image file.");
-    return;
-  }
+    if (!file) return;
 
-  if (file.size > 2 * 1024 * 1024) {
-    alert("Please choose an image smaller than 2 MB.");
-    return;
-  }
-
-  const reader = new FileReader();
-  reader.onload = () => {
-    try {
-      localStorage.setItem("portfolioPhoto", reader.result);
-      showPhoto(reader.result);
-    } catch {
-      alert("The image could not be saved. Please choose a smaller image.");
+    if (!file.type.startsWith("image/")) {
+        alert("Please select a valid image file.");
+        return;
     }
-  };
-  reader.readAsDataURL(file);
-});
 
-const savedTheme = localStorage.getItem("portfolioTheme");
-if (savedTheme === "light") document.body.classList.add("light");
+    const reader = new FileReader();
 
-function updateThemeIcon() {
-  themeToggle.textContent = document.body.classList.contains("light") ? "☾" : "☀";
-}
-updateThemeIcon();
+    reader.onload = function (e) {
+        showProfileImage(e.target.result);
+    };
 
-themeToggle.addEventListener("click", () => {
-  document.body.classList.toggle("light");
-  const theme = document.body.classList.contains("light") ? "light" : "dark";
-  localStorage.setItem("portfolioTheme", theme);
-  updateThemeIcon();
-});
-
-const commandForm = document.getElementById("command-form");
-const commandInput = document.getElementById("command-input");
-const commandOutput = document.getElementById("command-output");
-
-const commands = {
-  help: "Available commands:\nwhoami  - About me\nskills   - Technical areas\nexperience - Work experience\ncontact  - Contact links\ndate     - Current year\nclear    - Clear terminal",
-  whoami: "Mohsen Sharifi\nJunior DevOps & Infrastructure Engineer",
-  skills: "Linux | Infrastructure Operations | Monitoring | Zabbix | Splunk | Networking | DevOps",
-  experience: "Professional experience details will be added soon.",
-  contact: "LinkedIn: linkedin.com/in/m0hsensharifi/\nGitHub: github.com/m0hsensharifi",
-  date: "2026"
-};
-
-commandForm.addEventListener("submit", (event) => {
-  event.preventDefault();
-
-  const command = commandInput.value.trim().toLowerCase();
-  if (!command) return;
-
-  if (command === "clear") {
-    commandOutput.textContent = "";
-  } else {
-    commandOutput.textContent = commands[command] || `Command not found: ${command}\nType help to see available commands.`;
-  }
-
-  commandInput.value = "";
+    reader.readAsDataURL(file);
 });
